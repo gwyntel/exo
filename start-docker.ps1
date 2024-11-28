@@ -15,6 +15,7 @@ docker run `
     -it `
     --name exo-container `
     --hostname exo-docker `
+    --privileged `
     --cap-add=NET_ADMIN `
     --cap-add=NET_RAW `
     -e "TS_AUTHKEY=$TailscaleAuthKey" `

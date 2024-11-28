@@ -10,6 +10,8 @@ RUN apt-get update && apt-get install -y \
     git \
     curl \
     iptables \
+    iproute2 \
+    kmod \
     && curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null \
     && curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list \
     && apt-get update \
@@ -29,11 +31,33 @@ RUN pip install --no-cache-dir ".[formatting]"
 # Copy the rest of the application
 COPY . .
 
-# Create startup script
+# Create startup script that ensures TUN device exists
 RUN echo '#!/bin/bash\n\
+# Load the TUN module\n\
+modprobe tun || true\n\
+\n\
+# Create the TUN device\n\
+mkdir -p /dev/net\n\
+if [ ! -c /dev/net/tun ]; then\n\
+    mknod /dev/net/tun c 10 200\n\
+fi\n\
+chmod 600 /dev/net/tun\n\
+\n\
+# Start tailscaled in the background\n\
 tailscaled --state=mem: &\n\
+TAILSCALED_PID=$!\n\
+\n\
+# Wait for tailscaled to be ready\n\
+sleep 5\n\
+\n\
+# Attempt to bring up tailscale\n\
 tailscale up --authkey="$TS_AUTHKEY" --hostname="exo-docker" --accept-routes\n\
-exec python exo/main.py\n\
+\n\
+# Start the Python application\n\
+python exo/main.py\n\
+\n\
+# Cleanup\n\
+kill $TAILSCALED_PID\n\
 ' > /start.sh && chmod +x /start.sh
 
 # Expose the port used by exo
