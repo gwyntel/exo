@@ -6,10 +6,11 @@ if [[ "$(docker images -q exo:latest 2> /dev/null)" == "" ]]; then
     exit 1
 fi
 
-# Run the container with interactive mode
+# Run the container with interactive mode and host networking
 docker run \
     --rm \
     -it \
+    --network host \
     --name exo-container \
     exo:latest
 
