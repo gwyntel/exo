@@ -1,6 +1,8 @@
 param(
     [Parameter(Mandatory=$true)]
-    [string]$TailscaleAuthKey
+    [string]$TailscaleAuthKey,
+    [Parameter(Mandatory=$true)]
+    [string]$TailscaleApiKey
 )
 
 # Check if the image exists locally
@@ -19,6 +21,7 @@ docker run `
     --cap-add=NET_ADMIN `
     --cap-add=NET_RAW `
     -e "TS_AUTHKEY=$TailscaleAuthKey" `
+    -e "TS_API_KEY=$TailscaleApiKey" `
     exo:latest
 
 Write-Host "Docker container started successfully!"
