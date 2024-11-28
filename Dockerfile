@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     && curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.noarmor.gpg | tee /usr/share/keyrings/tailscale-archive-keyring.gpg >/dev/null \
     && curl -fsSL https://pkgs.tailscale.com/stable/debian/bookworm.tailscale-keyring.list | tee /etc/apt/sources.list.d/tailscale.list \
     && apt-get update \
-    && apt-get install -y tailscale \
+    && apt-get install -y tailscale jq \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy only requirements first to leverage Docker cache
@@ -53,8 +53,15 @@ sleep 5\n\
 # Attempt to bring up tailscale\n\
 tailscale up --authkey="$TS_AUTHKEY" --hostname="exo-docker" --accept-routes\n\
 \n\
-# Start the Python application\n\
-python exo/main.py\n\
+# Wait for Tailscale to be fully connected\n\
+sleep 5\n\
+\n\
+# Get the tailnet name from the DNS name\n\
+TAILNET=$(tailscale status --json | jq -r .Self.DNSName | cut -d"." -f2-3)\n\
+echo "Using tailnet: $TAILNET"\n\
+\n\
+# Start the Python application with Tailscale discovery\n\
+python exo/main.py --discovery-module=tailscale --tailscale-api-key="$TS_API_KEY" --tailnet-name="$TAILNET"\n\
 \n\
 # Cleanup\n\
 kill $TAILSCALED_PID\n\
