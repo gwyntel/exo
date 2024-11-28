@@ -28,6 +28,7 @@ EXPOSE 52415
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
 
 # Command to run the application
-ENTRYPOINT ["exo"]
+ENTRYPOINT ["python", "exo/main.py"]
