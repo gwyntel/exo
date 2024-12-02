@@ -1,0 +1,10 @@
+services:
+  - name: exo-app
+    type: web
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    buildCommand: ./build-docker.sh
+    startCommand: ./start-docker.sh
+    healthCheckPath: /
+    autoDeploy: true
